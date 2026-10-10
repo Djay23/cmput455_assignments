@@ -8,6 +8,8 @@ import random
 import time
 from sys import stderr
 from typing import Any, Callable, Dict, List, Optional, Tuple
+from time import perf_counter
+from copy import deepcopy
 
 # ---------------------------------------------------------------------------
 # Assignment restrictions (see assignment page)
@@ -378,11 +380,74 @@ class CommandInterface:
 #============================================================================
 # You need to implement the following methods.
 #============================================================================
+    def solver(self) -> Tuple[Optional[bool], Optional[int]]:
+        
+        # deadline = current time + timelimit
+        deadline = perf_counter() + self.timelimit
+
+        for move in self.game.legal_moves():
+            # Check whether the deadline has passed.
+            if deadline <= perf_counter():
+                return None, None
+
+            # Copy the original game and play this move on the copy.
+            child = deepcopy(self.game)
+            child.play(move)
+
+            # Call minimax(child, deadline).
+            result = minimax(child, deadline)
+
+
+            if result is None or perf_counter() >= deadline:
+                return (None, None)
+
+            if result is False:
+                return (True, move)
+            
+        # If all the result is True then it's our loss.
+        return (False, None)
+
+
+
     def cmd_solve(self, args: str) -> bool:
-        return not_yet()
+        '''
+        cmd_solve() translates the solver result into output
+
+        Solver result	Print	                            return
+        (True, move)	Current player’s color and move	    True
+        (False, None)	Opponent’s color only	            True
+        (None, None)	Nothing                             False
+        '''
+        if self.game is None:
+            print_error("no game started")
+            return False
+
+        won, move = self.solver()
+
+        if won is None:
+            return False
+        
+        if won is True:
+            # my won
+            print(self.game.toplay, move)
+        else:
+            # opponent won
+            print(opponent(self.game.toplay))
+
+        return True
 
     def cmd_timelimit(self, args: str) -> bool:
-        return not_yet()
+        try:
+            timelimit = int(args)
+        except ValueError:
+            return False
+
+        # Check if the timelimit is within a valid range
+        if MIN_TIMELIMIT <= timelimit <= MAX_TIMELIMIT:
+            self.timelimit= timelimit
+            return True
+        else:
+            return False
 #============================================================================
 # End of functions requiring implementation
 #============================================================================
