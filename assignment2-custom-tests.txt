@@ -1,0 +1,124 @@
+#CMPUT 455 - Assignment 2 custom tests
+#======================================================================
+# Output format for each test:
+#   command
+#   output lines (if any)
+#   = 1        on success
+#   = -1       on failure
+#
+# Lines starting with ? are marked, and count towards the custom test results.
+# Lines starting with # are comments.
+# A marked line whose expected output starts with @ is a regular expression used when multiple outputs are valid.
+#
+# solve prints the winner with perfect play. Afterwards it prints a winning move, but only when the player to play is the one who wins. When solve cannot answer within the current time limit it must print nothing and report = -1.
+#
+# The tests are grouped into easy, medium and hard:
+#   easy        a plain minimax solver has time for these
+#   medium      too slow for a plain solver, our better solver can do them
+#   hard        our current solver runs out of time, the answer is unknown
+#
+#======================================================================
+
+#======================================================================
+# GENMOVE - WINNING POSITION
+#======================================================================
+# Black has one legal move, and taking heap 0 wins the game.
+?heapgo 0.5 [[('b', 1)]]
+= 1
+
+# Solver should find the winning move and genmove should play heap 0.
+?genmove
+0
+= 1
+
+# Black gains 1 point after taking the token.
+?score
+b 1 w 0.5
+= 1
+
+#======================================================================
+# GENMOVE - LOSING POSITION
+#======================================================================
+
+# Black is losing, but heap 0 is the only legal move.
+?heapgo 0.5 [[('w', 5), ('w', 5)]]
+= 1
+
+# On a losing position, genmove should still play a legal random move.
+?genmove
+0
+= 1
+
+# Black takes one white token worth 5 points.
+?score
+b 5 w 0.5
+= 1
+
+#======================================================================
+# GENMOVE - RANDOM LEGAL MOVE ON LOSS
+#======================================================================
+
+# Black is losing and both heap 0 and heap 1 are legal.
+?heapgo 0.5 [[('w', 1)], [('w', 1)]]
+= 1
+
+# Genmove may randomly choose either legal heap.
+?genmove
+@[01]$
+= 1
+
+#======================================================================
+# GENMOVE - UNIQUE WINNING MOVE
+#======================================================================
+
+# All three heaps are legal, but heap 2 is the only winning move.
+?heapgo 0.5 [[('b', 1)], [('w', 2)], [('b', 3)]]
+= 1
+
+# Genmove should use the solver and choose the winning heap.
+?genmove
+2
+= 1
+
+#======================================================================
+# GENMOVE - WHITE TO PLAY
+#======================================================================
+
+# White is set as the current player and can win by taking heap 0.
+?heapgo 0.5 [[('b', 1)]]
+= 1
+
+?toplay w
+= 1
+
+# White should find and play the winning move.
+?genmove
+0
+= 1
+
+# White starts with 0.5 komi and gains 1 point.
+?score
+b 0 w 1.5
+= 1
+
+#======================================================================
+# GENMOVE - GAME STATE CHANGES
+#======================================================================
+
+# Black has a single winning move on heap 0.
+?heapgo 0.5 [[('b', 2)]]
+= 1
+
+?genmove
+0
+= 1
+
+# Genmove must actually remove the token from the heap.
+?show
+k 0.5 [[]]
+= 1
+
+# Black receives the token value.
+?score
+b 2 w 0.5
+= 1

@@ -348,7 +348,11 @@ class CommandInterface:
             print_error("no legal moves")
             return False
         # you need to replace this random move by a move from your solver
-        move = random.choice(moves)
+        if result == True:
+            move = winning_move
+        else:
+            move = random.choice(moves)
+        
         self.game.play(move)
         print(move)
         return True
