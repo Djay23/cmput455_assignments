@@ -350,6 +350,8 @@ class CommandInterface:
             print_error("no legal moves")
             return False
         # you need to replace this random move by a move from your solver
+        result, winning_move = self.solver()
+
         if result == True:
             move = winning_move
         else:

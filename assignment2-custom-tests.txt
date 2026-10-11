@@ -20,6 +20,14 @@
 #======================================================================
 
 #======================================================================
+# SOLVE - NO GAME STARTED
+#======================================================================
+
+# solve should fail before any Heap Go game has been created.
+?solve
+= -1
+
+#======================================================================
 # GENMOVE - WINNING POSITION
 #======================================================================
 # Black has one legal move, and taking heap 0 wins the game.
@@ -122,3 +130,208 @@ k 0.5 [[]]
 ?score
 b 2 w 0.5
 = 1
+
+#======================================================================
+# GENMOVE - MULTIPLE WINNING MOVES
+#======================================================================
+
+# White can win by playing either heap 0 or heap 1.
+?heapgo 0.5 [[('w', 9), ('b', 12), ('w', 5)], [('b', 6), ('b', 9)]]
+= 1
+
+?toplay w
+= 1
+
+# Either winning move is acceptable.
+?genmove
+@[01]$
+= 1
+
+
+#======================================================================
+# GENMOVE - NEGATIVE KOMI
+#======================================================================
+
+# Black has a winning move even with negative komi.
+?heapgo -2.5 [[('b', 3), ('w', 1)]]
+= 1
+
+?genmove
+0
+= 1
+
+# Black takes the top white token worth 1 point.
+?score
+b 1 w -2.5
+= 1
+
+
+#======================================================================
+# GENMOVE - CONSECUTIVE MOVES
+#======================================================================
+
+# Heap 2 is Black's unique winning move.
+?heapgo 0.5 [[('b', 1)], [('w', 2)], [('b', 3)]]
+= 1
+
+?genmove
+2
+= 1
+
+# White is now losing, but must still make a legal move.
+?genmove
+@[01]$
+= 1
+
+
+#======================================================================
+# TIMELIMIT COMMAND
+#======================================================================
+
+# Minimum valid time limit.
+?timelimit 1
+= 1
+
+# Maximum valid time limit.
+?timelimit 100
+= 1
+
+# Values outside the valid range must fail.
+?timelimit 0
+= -1
+
+?timelimit 101
+= -1
+
+#======================================================================
+# SOLVE - MUST NOT CHANGE GAME STATE
+#======================================================================
+
+# Solving should only analyze the position and must not play a move.
+?heapgo 0.5 [[('b', 1)]]
+= 1
+
+?solve
+b 0
+= 1
+
+# The heap must still contain the token after solve.
+?show
+k 0.5 [[('b', 1)]]
+= 1
+
+# The score must also remain unchanged.
+?score
+b 0 w 0.5
+= 1
+
+
+#======================================================================
+# SOLVE - LOSING PLAYER HAS NO WINNING MOVE
+#======================================================================
+
+# Black loses with perfect play.
+?heapgo 0.5 [[('w', 5), ('w', 5)]]
+= 1
+
+# Since the current player is losing, solve prints only the winner.
+?solve
+w
+= 1
+
+
+#======================================================================
+# SOLVE - WHITE TO PLAY WITH MULTIPLE WINNING MOVES
+#======================================================================
+
+# White wins with either heap 0 or heap 1.
+?heapgo 0.5 [[('w', 9), ('b', 12), ('w', 5)], [('b', 6), ('b', 9)]]
+= 1
+
+?toplay w
+= 1
+
+?solve
+@(w 0|w 1)$
+= 1
+
+
+#======================================================================
+# SOLVE - MIDDLE OF GAME
+#======================================================================
+
+# Start from a larger position and manually play one move.
+?heapgo 0.5 [[('b', 4), ('w', 7), ('b', 2)], [('w', 3), ('b', 8)]]
+= 1
+
+?play 1
+= 1
+
+# After heap 1 is played, Black is still the eventual winner.
+?solve
+b
+= 1
+
+# solve must not change the current score.
+?score
+b 11 w 0.5
+= 1
+
+
+#======================================================================
+# GENMOVE - AFTER MANUAL PLAY
+#======================================================================
+
+# Test that genmove works from a non-initial position.
+?heapgo 0.5 [[('b', 4), ('w', 7), ('b', 2)], [('w', 3), ('b', 8)]]
+= 1
+
+?play 1
+= 1
+
+# White is losing, so genmove must still choose the only legal heap.
+?genmove
+0
+= 1
+
+# Heap 0 should change after White plays it.
+?show
+k 0.5 [[('b', 4), ('w', 7)], []]
+= 1
+
+
+#======================================================================
+# GENMOVE - IDENTICAL HEAPS
+#======================================================================
+
+# Three identical heaps test symmetry handling.
+?heapgo 0.5 [[('b', 1)], [('b', 1)], [('b', 1)]]
+= 1
+
+# Every heap is a winning first move.
+?genmove
+@[012]$
+= 1
+
+
+#======================================================================
+# TIMELIMIT - INVALID ARGUMENT TYPES
+#======================================================================
+
+# Timelimit must be an integer.
+?timelimit 1.5
+= -1
+
+?timelimit two
+= -1
+
+# Missing argument must also fail.
+?timelimit
+= -1
+
+
+
+
+# A fresh program with no game should reject solve.
+# NOTE: Keep this section near the top of the file if you want to test a
+# truly fresh state, because previous heapgo commands create a game.
